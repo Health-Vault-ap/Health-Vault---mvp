@@ -1,0 +1,736 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>HealthVault</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet"/>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --navy:#1e3a8a; --navy-dark:#142968; --navy-light:#dbeafe;
+      --blue:#2563eb; --bg-panel:#eef2fb; --bg:#f8fafc;
+      --white:#ffffff; --ink:#0f172a; --ink-soft:#64748b;
+      --border:#e2e8f0; --green:#22c55e; --green-bg:#dcfce7;
+      --red:#dc2626; --radius:12px;
+      --shadow:0 1px 3px rgba(0,0,0,0.08),0 4px 16px rgba(0,0,0,0.06);
+    }
+    body { font-family:'Inter',sans-serif; background:var(--bg); color:var(--ink); min-height:100vh; }
+    .page { display:none; }
+    .page.active { display:flex; min-height:100vh; }
+
+    .login-left { flex:1; background:var(--bg-panel); padding:60px 56px; display:flex; flex-direction:column; justify-content:center; position:relative; overflow:hidden; }
+    .login-left::before { content:''; position:absolute; width:400px; height:400px; background:radial-gradient(circle,rgba(37,99,235,.08) 0%,transparent 70%); top:-80px; left:-80px; pointer-events:none; }
+    .badge { display:inline-flex; align-items:center; gap:6px; background:var(--white); border:1px solid var(--border); border-radius:999px; padding:6px 14px; font-size:12px; font-weight:500; color:var(--navy); width:fit-content; margin-bottom:32px; }
+    .login-left h1 { font-size:48px; font-weight:800; line-height:1.1; letter-spacing:-1.5px; margin-bottom:20px; }
+    .login-left p { font-size:15px; color:var(--ink-soft); line-height:1.7; max-width:340px; margin-bottom:48px; }
+    .feature-card { background:var(--white); border:1px solid var(--border); border-radius:var(--radius); padding:18px 20px; display:flex; align-items:center; gap:14px; max-width:320px; box-shadow:var(--shadow); }
+    .feature-icon { width:44px; height:44px; background:var(--navy); border-radius:10px; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+    .feature-card h4 { font-size:14px; font-weight:600; }
+    .feature-card span { font-size:12px; color:var(--ink-soft); }
+
+    .login-right { width:540px; background:var(--white); display:flex; align-items:center; justify-content:center; padding:48px 56px; }
+    .form-wrap { width:100%; }
+    .logo { display:flex; align-items:center; gap:10px; margin-bottom:32px; }
+    .logo-icon { width:38px; height:38px; background:var(--navy); border-radius:9px; display:flex; align-items:center; justify-content:center; }
+    .logo-text { font-size:17px; font-weight:700; }
+    .tabs { display:flex; background:var(--bg); border:1px solid var(--border); border-radius:10px; padding:4px; margin-bottom:28px; }
+    .tab { flex:1; padding:9px; text-align:center; font-size:13px; font-weight:600; color:var(--ink-soft); cursor:pointer; border-radius:7px; transition:all .2s; }
+    .tab.active { background:var(--white); color:var(--navy); box-shadow:0 1px 4px rgba(0,0,0,.1); }
+    .form-panel { display:none; animation:fadeUp .25s ease; }
+    .form-panel.active { display:block; }
+    @keyframes fadeUp { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:translateY(0)} }
+    h2 { font-size:24px; font-weight:800; letter-spacing:-.5px; margin-bottom:6px; }
+    .sub { font-size:13px; color:var(--ink-soft); margin-bottom:24px; line-height:1.5; }
+    .field { margin-bottom:16px; }
+    label { display:block; font-size:11px; font-weight:600; letter-spacing:.06em; text-transform:uppercase; color:var(--ink-soft); margin-bottom:6px; }
+    input[type=text],input[type=email],input[type=password] { width:100%; padding:12px 14px; border:1.5px solid var(--border); border-radius:var(--radius); font-family:'Inter',sans-serif; font-size:14px; color:var(--ink); background:var(--bg); outline:none; transition:border-color .2s,box-shadow .2s; }
+    input:focus { border-color:var(--blue); box-shadow:0 0 0 3px rgba(37,99,235,.1); background:var(--white); }
+    .field-hint { font-size:11px; color:var(--red); margin-top:5px; display:none; }
+    .btn { width:100%; padding:13px; border:none; border-radius:999px; font-family:'Inter',sans-serif; font-size:14px; font-weight:600; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:8px; transition:background .15s,transform .15s; margin-top:6px; }
+    .btn-primary { background:var(--navy); color:#fff; }
+    .btn-primary:hover { background:var(--navy-dark); transform:translateY(-1px); }
+    .btn-primary:disabled { opacity:.6; cursor:not-allowed; transform:none; }
+    .error-msg { font-size:12px; color:var(--red); margin-top:10px; display:none; font-weight:500; }
+    .success-msg { font-size:12px; color:#15803d; background:var(--green-bg); border:1px solid #bbf7d0; border-radius:8px; padding:10px 14px; margin-top:10px; display:none; font-weight:500; }
+    .divider { text-align:center; font-size:11px; font-weight:600; letter-spacing:.1em; text-transform:uppercase; color:var(--ink-soft); margin:18px 0; }
+    .security-box { background:#fff5f5; border:1px solid #fee2e2; border-radius:var(--radius); padding:12px 16px; display:flex; align-items:center; gap:10px; font-size:12px; color:var(--ink-soft); }
+
+    #page-dashboard { flex-direction:column; }
+    .topbar { height:60px; background:var(--white); border-bottom:1px solid var(--border); display:flex; align-items:center; padding:0 24px; gap:20px; position:sticky; top:0; z-index:10; }
+    .topbar-logo { display:flex; align-items:center; gap:10px; min-width:200px; }
+    .topbar-logo .logo-text { font-size:16px; font-weight:700; }
+    .logo-sub { font-size:9px; font-weight:600; letter-spacing:.12em; text-transform:uppercase; color:var(--ink-soft); display:block; }
+    .search-bar { flex:1; max-width:480px; position:relative; }
+    .search-bar input { width:100%; padding:9px 14px 9px 36px; border:1px solid var(--border); border-radius:8px; font-size:13px; background:var(--bg); outline:none; }
+    .search-bar::before { content:'🔍'; position:absolute; left:11px; top:50%; transform:translateY(-50%); font-size:12px; pointer-events:none; }
+    .topbar-right { margin-left:auto; display:flex; align-items:center; gap:12px; }
+    .network-badge { display:flex; align-items:center; gap:6px; background:var(--green-bg); border:1px solid #bbf7d0; border-radius:999px; padding:5px 12px; font-size:12px; font-weight:600; color:#15803d; }
+    .network-dot { width:7px; height:7px; background:var(--green); border-radius:50%; }
+    .icon-btn { width:34px; height:34px; border:1px solid var(--border); border-radius:8px; background:var(--white); display:flex; align-items:center; justify-content:center; cursor:pointer; font-size:14px; }
+    .btn-connect { background:var(--navy); color:#fff; border:none; border-radius:999px; padding:8px 18px; font-family:'Inter',sans-serif; font-size:13px; font-weight:600; cursor:pointer; }
+    .user-greeting { font-size:13px; font-weight:600; color:var(--ink); }
+    .dashboard-body { display:flex; flex:1; }
+    .sidebar { width:240px; background:var(--white); border-right:1px solid var(--border); padding:28px 0; flex-shrink:0; }
+    .sidebar-label { font-size:10px; font-weight:700; letter-spacing:.12em; text-transform:uppercase; color:var(--ink-soft); padding:0 20px; margin-bottom:10px; }
+    .sidebar-item { display:flex; align-items:center; gap:10px; padding:10px 20px; font-size:14px; font-weight:500; color:var(--ink-soft); cursor:pointer; transition:background .15s,color .15s; position:relative; }
+    .sidebar-item:hover { background:var(--bg); color:var(--ink); }
+    .sidebar-item.active { background:var(--navy-light); color:var(--navy); font-weight:600; }
+    .sidebar-item.active::after { content:''; position:absolute; right:0; top:0; bottom:0; width:3px; background:var(--navy); border-radius:3px 0 0 3px; }
+    .main { flex:1; padding:40px 48px; background:var(--bg); overflow-y:auto; }
+    .page-header { margin-bottom:32px; }
+    .page-header h2 { font-size:32px; font-weight:800; letter-spacing:-.8px; margin-bottom:6px; }
+    .page-header p { font-size:14px; color:var(--ink-soft); }
+
+    .upload-card { background:var(--white); border:1px solid var(--border); border-radius:16px; padding:32px; max-width:720px; box-shadow:var(--shadow); margin-bottom:28px; }
+    .upload-zone { border:2px dashed var(--border); border-radius:var(--radius); padding:40px 24px; text-align:center; cursor:pointer; transition:border-color .2s,background .2s; position:relative; }
+    .upload-zone:hover,.upload-zone.drag-over { border-color:var(--blue); background:#eff6ff; }
+    .upload-zone input[type=file] { position:absolute; inset:0; opacity:0; cursor:pointer; width:100%; height:100%; }
+    .upload-icon-wrap { width:56px; height:56px; background:var(--navy-light); border-radius:14px; display:flex; align-items:center; justify-content:center; font-size:24px; margin:0 auto 14px; }
+    .upload-zone h3 { font-size:15px; font-weight:700; margin-bottom:4px; }
+    .upload-zone p { font-size:13px; color:var(--ink-soft); }
+    .upload-zone p strong { color:var(--blue); }
+    .upload-progress { margin-top:16px; background:var(--bg); border-radius:999px; height:6px; overflow:hidden; display:none; }
+    .upload-progress-bar { height:100%; background:var(--navy); border-radius:999px; width:0%; transition:width .3s; }
+
+    .files-section { max-width:720px; }
+    .files-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:16px; }
+    .files-header h3 { font-size:16px; font-weight:700; }
+    .files-count { font-size:12px; color:var(--ink-soft); background:var(--bg); border:1px solid var(--border); border-radius:999px; padding:3px 10px; font-weight:600; }
+    .file-list { display:flex; flex-direction:column; gap:10px; }
+    .file-item { background:var(--white); border:1px solid var(--border); border-radius:var(--radius); padding:16px 18px; display:flex; align-items:center; gap:14px; box-shadow:var(--shadow); transition:border-color .2s; }
+    .file-item:hover { border-color:var(--blue); }
+    .file-thumb { width:44px; height:44px; background:var(--navy-light); border-radius:10px; display:flex; align-items:center; justify-content:center; font-size:20px; flex-shrink:0; }
+    .file-info { flex:1; min-width:0; }
+    .file-name { font-size:14px; font-weight:600; color:var(--ink); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; margin-bottom:3px; }
+    .file-meta { font-size:11px; color:var(--ink-soft); }
+    .file-actions { display:flex; align-items:center; gap:8px; flex-shrink:0; }
+    .btn-file-view { background:var(--navy-light); color:var(--navy); border:none; border-radius:8px; padding:7px 14px; font-family:'Inter',sans-serif; font-size:12px; font-weight:600; cursor:pointer; transition:background .15s; }
+    .btn-file-view:hover { background:#bfdbfe; }
+    .btn-file-del { background:#fee2e2; color:var(--red); border:none; border-radius:8px; padding:7px 10px; font-family:'Inter',sans-serif; font-size:12px; font-weight:600; cursor:pointer; transition:background .15s; }
+    .btn-file-del:hover { background:#fecaca; }
+    .empty-state { text-align:center; padding:40px 24px; color:var(--ink-soft); }
+    .empty-state .empty-icon { font-size:36px; margin-bottom:12px; }
+    .empty-state p { font-size:14px; }
+
+    .toast { position:fixed; bottom:28px; left:50%; transform:translateX(-50%); background:#1e293b; color:#fff; border-radius:999px; padding:12px 22px; font-size:13px; font-weight:500; display:none; align-items:center; gap:8px; z-index:200; box-shadow:0 8px 24px rgba(0,0,0,.2); animation:fadeUp .3s ease; white-space:nowrap; }
+    .toast.show { display:flex; }
+
+    .modal-overlay { display:none; position:fixed; inset:0; background:rgba(15,23,42,.7); z-index:100; align-items:center; justify-content:center; padding:24px; }
+    .modal-overlay.open { display:flex; }
+    .modal-box { background:var(--white); border-radius:16px; width:100%; max-width:820px; height:85vh; display:flex; flex-direction:column; overflow:hidden; box-shadow:0 24px 64px rgba(0,0,0,.3); }
+    .modal-header { display:flex; align-items:center; justify-content:space-between; padding:16px 20px; border-bottom:1px solid var(--border); flex-shrink:0; }
+    .modal-header h4 { font-size:14px; font-weight:600; }
+    .modal-header span { font-size:12px; color:var(--ink-soft); }
+    .btn-close-modal { background:var(--bg); border:1px solid var(--border); border-radius:8px; padding:6px 14px; font-family:'Inter',sans-serif; font-size:13px; font-weight:500; cursor:pointer; color:var(--ink-soft); }
+    .btn-close-modal:hover { background:var(--border); }
+    .modal-body { flex:1; overflow-y:auto; background:#525659; padding:20px; display:flex; flex-direction:column; align-items:center; gap:12px; }
+    .modal-body canvas { max-width:100%; box-shadow:0 4px 20px rgba(0,0,0,.4); }
+    .pdf-loading { color:#ccc; font-size:14px; margin-top:40px; display:flex; align-items:center; gap:10px; }
+
+    .spinner { width:17px; height:17px; border:2px solid rgba(255,255,255,.3); border-top-color:#fff; border-radius:50%; animation:spin .6s linear infinite; }
+    .spinner-dark { width:17px; height:17px; border:2px solid rgba(30,58,138,.2); border-top-color:var(--navy); border-radius:50%; animation:spin .6s linear infinite; }
+    @keyframes spin { to{transform:rotate(360deg)} }
+    .btn-logout-mobile {
+      display: none;
+      background: none;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 7px 14px;
+      font-family: 'Inter', sans-serif;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--ink-soft);
+      cursor: pointer;
+      white-space: nowrap;
+    }
+    .btn-logout-mobile:hover { background: var(--bg); }
+
+    @media(max-width:900px){
+      /* LOGIN */
+      .login-left { display:none; }
+      .login-right { width:100%; padding:32px 24px; }
+      .form-wrap { max-width:100%; }
+
+      /* TOPBAR */
+      .topbar { padding:0 16px; gap:10px; height:56px; }
+      .topbar-logo .logo-sub { display:none; }
+      .search-bar { display:none; }
+      .network-badge { display:none; }
+      .icon-btn { display:none; }
+      .btn-connect { display:none; }
+      .user-greeting { display:flex !important; }
+      .user-greeting { font-size:12px; max-width:120px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+      .btn-logout-mobile { display:flex !important; }
+
+      /* SIDEBAR */
+      .sidebar { display:none; }
+
+      /* MAIN */
+      .main { padding:24px 16px; }
+      .page-header h2 { font-size:22px; }
+      .page-header p { font-size:13px; }
+
+      /* UPLOAD CARD */
+      .upload-card { padding:20px 16px; }
+      .upload-zone { padding:32px 16px; }
+      .upload-icon-wrap { width:48px; height:48px; font-size:20px; }
+      .upload-zone h3 { font-size:14px; }
+      .upload-zone p { font-size:12px; }
+
+      /* FILE LIST */
+      .files-section { max-width:100%; }
+      .file-item { padding:12px 14px; gap:10px; }
+      .file-thumb { width:36px; height:36px; font-size:16px; }
+      .file-name { font-size:13px; }
+      .file-meta { font-size:10px; }
+      .btn-file-view { padding:6px 10px; font-size:11px; }
+      .btn-file-del { padding:6px 8px; font-size:11px; }
+
+      /* MODAL */
+      .modal-box { height:90vh; border-radius:12px; }
+      .modal-header { padding:12px 16px; }
+
+      /* EXIT BANNER */
+      .exit-banner { bottom:16px; left:16px; right:16px; transform:none; width:auto; }
+      .exit-btn { width:100%; text-align:center; font-size:13px; padding:13px 20px; }
+    }
+    /* ── EXIT INTENT BANNER ── */
+    .exit-banner {
+      display: none;
+      position: fixed;
+      bottom: 32px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 300;
+      animation: slideUp .4s ease;
+    }
+
+    @keyframes slideUp {
+      from { opacity:0; transform: translateX(-50%) translateY(20px); }
+      to   { opacity:1; transform: translateX(-50%) translateY(0); }
+    }
+
+    .exit-banner.show { display: flex; align-items: center; gap: 16px; }
+
+    .exit-btn {
+      background: var(--navy);
+      color: #fff;
+      border: none;
+      border-radius: 10px;
+      padding: 14px 28px;
+      font-family: 'Inter', sans-serif;
+      font-size: 14px;
+      font-weight: 700;
+      cursor: pointer;
+      white-space: nowrap;
+      box-shadow: 0 8px 24px rgba(30,58,138,0.35);
+      transition: background .15s, transform .15s;
+      text-decoration: none;
+      display: inline-block;
+    }
+
+    .exit-btn:hover {
+      background: var(--navy-dark);
+      transform: translateY(-2px);
+    }
+
+    .exit-close {
+      width: 28px; height: 28px;
+      background: rgba(255,255,255,0.15);
+      border: none; border-radius: 50%;
+      color: #fff; font-size: 14px;
+      cursor: pointer; display: flex;
+      align-items: center; justify-content: center;
+      position: absolute;
+      top: -10px; right: -10px;
+      font-weight: 700;
+    }
+
+  </style>
+</head>
+<body>
+
+<!-- PAGE 1: LOGIN / CADASTRO -->
+<div class="page active" id="page-login">
+  <div class="login-left">
+    <div class="badge">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+      EAS Secured Protocol
+    </div>
+    <h1>Seus dados,<br>sua soberania.</h1>
+    <p>Acesse seu prontuário médico descentralizado com a segurança criptográfica da rede Ethereum.</p>
+    <div class="feature-card">
+      <div class="feature-icon">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+      </div>
+      <div><h4>Criptografia Ponta-a-Ponta</h4><span>Attestation Service (EAS)</span></div>
+    </div>
+  </div>
+
+  <div class="login-right">
+    <div class="form-wrap">
+      <div class="logo">
+        <div class="logo-icon">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+        </div>
+        <div class="logo-text">HealthVault</div>
+      </div>
+
+      <div class="tabs">
+        <div class="tab active" id="tab-login" onclick="switchTab('login')">Entrar</div>
+        <div class="tab" id="tab-register" onclick="switchTab('register')">Criar Conta</div>
+      </div>
+
+      <!-- LOGIN -->
+      <div class="form-panel active" id="panel-login">
+        <h2>Bem-vindo de volta</h2>
+        <p class="sub">Acesse sua conta com seu e-mail e senha.</p>
+        <div class="field">
+          <label>E-mail</label>
+          <input type="email" id="login-email" placeholder="seu@email.com"/>
+          <p class="field-hint" id="hint-login-email">E-mail inválido</p>
+        </div>
+        <div class="field">
+          <label>Senha</label>
+          <input type="password" id="login-pass" placeholder="••••••••"/>
+        </div>
+        <p class="error-msg" id="login-error">⚠ E-mail ou senha incorretos.</p>
+        <button class="btn btn-primary" id="btn-login" onclick="handleLogin()">Entrar</button>
+        <div class="divider">SEGURANÇA</div>
+        <div class="security-box">🔒 Protegido por <strong>&nbsp;Ethereum Attestation Service (EAS)</strong></div>
+      </div>
+
+      <!-- CADASTRO -->
+      <div class="form-panel" id="panel-register">
+        <h2>Criar sua conta</h2>
+        <p class="sub">Preencha os dados abaixo para começar.</p>
+        <div class="field">
+          <label>Nome completo</label>
+          <input type="text" id="reg-name" placeholder="Seu nome"/>
+          <p class="field-hint" id="hint-reg-name">Nome obrigatório</p>
+        </div>
+        <div class="field">
+          <label>E-mail</label>
+          <input type="email" id="reg-email" placeholder="seu@email.com"/>
+          <p class="field-hint" id="hint-reg-email">E-mail inválido</p>
+        </div>
+        <div class="field">
+          <label>Senha</label>
+          <input type="password" id="reg-pass" placeholder="Mínimo 6 caracteres"/>
+          <p class="field-hint" id="hint-reg-pass">Mínimo 6 caracteres</p>
+        </div>
+        <p class="error-msg" id="reg-error">⚠ Este e-mail já está cadastrado.</p>
+        <p class="success-msg" id="reg-success">✅ Conta criada! Fazendo login...</p>
+        <button class="btn btn-primary" id="btn-register" onclick="handleRegister()">Criar Conta</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- PAGE 2: DASHBOARD -->
+<div class="page" id="page-dashboard">
+  <div class="topbar">
+    <div class="topbar-logo">
+      <div class="logo-icon" style="width:32px;height:32px;border-radius:8px;background:var(--navy);display:flex;align-items:center;justify-content:center;">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+      </div>
+      <div><div class="logo-text">HealthVault</div><span class="logo-sub">Secure Vitality</span></div>
+    </div>
+    <div class="search-bar"><input type="text" placeholder="Buscar registros..."/></div>
+    <div class="topbar-right">
+      <span class="user-greeting" id="user-greeting">👋 Olá!</span>
+      <div class="network-badge"><div class="network-dot"></div>Optimism Mainnet</div>
+      <div class="icon-btn">🔔</div>
+      <div class="icon-btn">⚙️</div>
+      <button class="btn-connect">🗂 Conectar Carteira</button>
+      <button class="btn-logout-mobile" onclick="logout()">← Sair</button>
+    </div>
+  </div>
+
+  <div class="dashboard-body">
+    <div class="sidebar">
+      <div class="sidebar-label">Menu Principal</div>
+      <div class="sidebar-item">⊞ &nbsp;Visão Geral</div>
+      <div class="sidebar-item active">🗄 &nbsp;Repositório de Saúde</div>
+      <div class="sidebar-item">⚖ &nbsp;Governança</div>
+      <div class="sidebar-item">🪪 &nbsp;Identidade Digital</div>
+    </div>
+
+    <div class="main">
+      <div class="page-header">
+        <h2>Repositório de Saúde</h2>
+        <p>Seus documentos médicos armazenados com segurança na nuvem.</p>
+      </div>
+
+      <div class="upload-card">
+        <div class="upload-zone" id="upload-zone">
+          <input type="file" accept=".pdf,.jpg,.jpeg,.png" id="file-input" onchange="handleFile(this)"/>
+          <div class="upload-icon-wrap">📁</div>
+          <h3>Adicionar PDF ou Imagem</h3>
+          <p>Arraste e solte ou <strong>clique para selecionar</strong> · PDF, JPG, PNG</p>
+        </div>
+        <div class="upload-progress" id="upload-progress">
+          <div class="upload-progress-bar" id="upload-progress-bar"></div>
+        </div>
+      </div>
+
+      <div class="files-section">
+        <div class="files-header">
+          <h3>Meus Arquivos</h3>
+          <span class="files-count" id="files-count">0 arquivos</span>
+        </div>
+        <div class="file-list" id="file-list">
+          <div class="empty-state" id="empty-state">
+            <div class="empty-icon">📂</div>
+            <p>Nenhum arquivo adicionado ainda.</p>
+          </div>
+        </div>
+      </div>
+
+      <div style="margin-top:32px;">
+        <button onclick="logout()" style="background:none;border:none;color:var(--ink-soft);font-family:'Inter',sans-serif;font-size:13px;cursor:pointer;text-decoration:underline;">← Sair da conta</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL PDF/IMAGEM -->
+<div class="modal-overlay" id="pdf-modal">
+  <div class="modal-box">
+    <div class="modal-header">
+      <div><h4>Visualizador de Arquivo</h4><span id="modal-file-name"></span></div>
+      <button class="btn-close-modal" onclick="closeModal()">✕ Fechar</button>
+    </div>
+    <div class="modal-body" id="pdf-body">
+      <div class="pdf-loading" id="pdf-loading" style="display:none;"><div class="spinner"></div> Carregando...</div>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"><span id="toast-msg"></span></div>
+
+
+
+<!-- MOBILE BOTTOM NAV -->
+<div id="mobile-nav" style="display:none; position:fixed; bottom:0; left:0; right:0; background:#fff; border-top:1px solid #e2e8f0; padding:10px 0 20px; z-index:50; justify-content:space-around;">
+  <div style="display:flex;flex-direction:column;align-items:center;gap:4px;font-size:11px;color:#64748b;cursor:pointer;">
+    <span style="font-size:20px;">⊞</span>Visão Geral
+  </div>
+  <div style="display:flex;flex-direction:column;align-items:center;gap:4px;font-size:11px;color:#1e3a8a;font-weight:700;cursor:pointer;">
+    <span style="font-size:20px;">🗄</span>Repositório
+  </div>
+  <div style="display:flex;flex-direction:column;align-items:center;gap:4px;font-size:11px;color:#64748b;cursor:pointer;">
+    <span style="font-size:20px;">⚖</span>Governança
+  </div>
+  <div style="display:flex;flex-direction:column;align-items:center;gap:4px;font-size:11px;color:#64748b;cursor:pointer;">
+    <span style="font-size:20px;">🪪</span>Identidade
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+  pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+
+  const SUPABASE_URL  = 'https://jsavdqvyiqrjqzbsqfoi.supabase.co';
+  const SUPABASE_KEY  = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpzYXZkcXZ5aXFyanF6YnNxZm9pIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkzMjE4OTQsImV4cCI6MjA5NDg5Nzg5NH0.G1ninzr2TR1mNS6gsDtOmrG--h7-Yk7vljXzwS3ww-g';
+  const BUCKET        = 'health-files';
+
+  const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+  let currentUser = null;
+
+  // ── Utils ──
+  function isValidEmail(e) { return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e); }
+
+  function showToast(msg, emoji='✅') {
+    document.getElementById('toast-msg').textContent = emoji + ' ' + msg;
+    const t = document.getElementById('toast');
+    t.classList.add('show');
+    setTimeout(() => t.classList.remove('show'), 3000);
+  }
+
+  function goTo(id) {
+    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+    document.getElementById(id).classList.add('active');
+    updateMobileNav();
+  }
+
+  // ── Tabs ──
+  function switchTab(tab) {
+    document.getElementById('tab-login').classList.toggle('active', tab === 'login');
+    document.getElementById('tab-register').classList.toggle('active', tab === 'register');
+    document.getElementById('panel-login').classList.toggle('active', tab === 'login');
+    document.getElementById('panel-register').classList.toggle('active', tab === 'register');
+    ['login-error','reg-error','reg-success'].forEach(id => document.getElementById(id).style.display = 'none');
+  }
+
+  // ── Cadastro ──
+  async function handleRegister() {
+    const name  = document.getElementById('reg-name').value.trim();
+    const email = document.getElementById('reg-email').value.trim();
+    const pass  = document.getElementById('reg-pass').value;
+    let valid = true;
+
+    ['hint-reg-name','hint-reg-email','hint-reg-pass','reg-error','reg-success']
+      .forEach(id => document.getElementById(id).style.display = 'none');
+
+    if (!name)               { document.getElementById('hint-reg-name').style.display  = 'block'; valid = false; }
+    if (!isValidEmail(email)){ document.getElementById('hint-reg-email').style.display = 'block'; valid = false; }
+    if (pass.length < 6)     { document.getElementById('hint-reg-pass').style.display  = 'block'; valid = false; }
+    if (!valid) return;
+
+    const btn = document.getElementById('btn-register');
+    btn.innerHTML = '<span class="spinner"></span>'; btn.disabled = true;
+
+    const { data, error } = await sb.auth.signUp({
+      email, password: pass,
+      options: { data: { name } }
+    });
+
+    if (error) {
+      document.getElementById('reg-error').textContent = '⚠ ' + (error.message.includes('already') ? 'E-mail já cadastrado.' : error.message);
+      document.getElementById('reg-error').style.display = 'block';
+      btn.innerHTML = 'Criar Conta'; btn.disabled = false;
+      return;
+    }
+
+    document.getElementById('reg-success').style.display = 'block';
+    currentUser = data.user;
+    currentUser.name = name;
+    document.getElementById('user-greeting').textContent = '👋 Olá, ' + name.split(' ')[0] + '!';
+    setTimeout(async () => { await loadFiles(); goTo('page-dashboard'); }, 1200);
+  }
+
+  // ── Login ──
+  async function handleLogin() {
+    const email = document.getElementById('login-email').value.trim();
+    const pass  = document.getElementById('login-pass').value;
+    const btn   = document.getElementById('btn-login');
+
+    ['hint-login-email','login-error'].forEach(id => document.getElementById(id).style.display = 'none');
+    if (!isValidEmail(email)) { document.getElementById('hint-login-email').style.display = 'block'; return; }
+
+    btn.innerHTML = '<span class="spinner"></span>'; btn.disabled = true;
+
+    const { data, error } = await sb.auth.signInWithPassword({ email, password: pass });
+
+    if (error) {
+      document.getElementById('login-error').style.display = 'block';
+      btn.innerHTML = 'Entrar'; btn.disabled = false;
+      return;
+    }
+
+    currentUser = data.user;
+    const name = currentUser.user_metadata?.name || email.split('@')[0];
+    document.getElementById('user-greeting').textContent = '👋 Olá, ' + name.split(' ')[0] + '!';
+    await loadFiles();
+    goTo('page-dashboard');
+  }
+
+  // ── Logout ──
+  async function logout() {
+    await sb.auth.signOut();
+    currentUser = null;
+
+    // Reset botões
+    document.getElementById('btn-login').innerHTML    = 'Entrar';
+    document.getElementById('btn-login').disabled     = false;
+    document.getElementById('btn-register').innerHTML = 'Criar Conta';
+    document.getElementById('btn-register').disabled  = false;
+
+    // Limpa campos
+    document.getElementById('login-email').value = '';
+    document.getElementById('login-pass').value  = '';
+    document.getElementById('reg-name').value    = '';
+    document.getElementById('reg-email').value   = '';
+    document.getElementById('reg-pass').value    = '';
+
+    // Esconde mensagens
+    ['login-error','reg-error','reg-success',
+     'hint-login-email','hint-reg-name','hint-reg-email','hint-reg-pass']
+      .forEach(id => document.getElementById(id).style.display = 'none');
+
+    switchTab('login');
+    goTo('page-login');
+  }
+
+  // ── Upload ──
+  async function handleFile(input) {
+    if (!input.files || !input.files[0]) return;
+    const file = input.files[0];
+    const allowed = ['application/pdf','image/jpeg','image/jpg','image/png'];
+    if (!allowed.includes(file.type)) { showToast('Formato não suportado. Use PDF, JPG ou PNG.', '⚠️'); return; }
+
+    const progress = document.getElementById('upload-progress');
+    const bar = document.getElementById('upload-progress-bar');
+    progress.style.display = 'block';
+    bar.style.width = '30%';
+
+    const ext      = file.name.split('.').pop();
+    const safeName = Date.now() + '_' + file.name.replace(/[^a-zA-Z0-9._-]/g, '_');
+    const path     = `${currentUser.id}/${safeName}`;
+
+    bar.style.width = '60%';
+
+    const { error } = await sb.storage.from(BUCKET).upload(path, file, { upsert: false });
+
+    bar.style.width = '100%';
+    setTimeout(() => { progress.style.display = 'none'; bar.style.width = '0%'; }, 600);
+
+    if (error) { showToast('Erro ao enviar arquivo.', '❌'); input.value = ''; return; }
+
+    showToast('Arquivo salvo na nuvem!');
+    input.value = '';
+    await loadFiles();
+  }
+
+  // ── Carregar arquivos ──
+  async function loadFiles() {
+    const { data, error } = await sb.storage.from(BUCKET).list(currentUser.id, {
+      sortBy: { column: 'created_at', order: 'desc' }
+    });
+
+    const list  = document.getElementById('file-list');
+    const empty = document.getElementById('empty-state');
+    const count = document.getElementById('files-count');
+
+    list.querySelectorAll('.file-item').forEach(el => el.remove());
+
+    if (error || !data || data.length === 0) {
+      empty.style.display = 'block';
+      count.textContent = '0 arquivos';
+      return;
+    }
+
+    // Filtra arquivos reais (ignora .emptyFolderPlaceholder)
+    const files = data.filter(f => f.name !== '.emptyFolderPlaceholder');
+    empty.style.display = files.length === 0 ? 'block' : 'none';
+    count.textContent = files.length + (files.length === 1 ? ' arquivo' : ' arquivos');
+
+    files.forEach(file => {
+      const isImage = /\.(jpg|jpeg|png)$/i.test(file.name);
+      const originalName = file.name.replace(/^\d+_/, '');
+      const size = file.metadata?.size ? (file.metadata.size / 1024).toFixed(1) + ' KB' : '';
+      const date = new Date(file.created_at).toLocaleDateString('pt-BR');
+      const path = `${currentUser.id}/${file.name}`;
+
+      const item = document.createElement('div');
+      item.className = 'file-item';
+      item.innerHTML = `
+        <div class="file-thumb">${isImage ? '🖼' : '📄'}</div>
+        <div class="file-info">
+          <div class="file-name">${originalName}</div>
+          <div class="file-meta">${size}${size ? ' · ' : ''}${date}</div>
+        </div>
+        <div class="file-actions">
+          <button class="btn-file-view" onclick="viewFile('${path}','${originalName}','${isImage}')">🔍 Ver</button>
+          <button class="btn-file-del" onclick="deleteFile('${path}')">🗑</button>
+        </div>`;
+      list.appendChild(item);
+    });
+  }
+
+  // ── Deletar ──
+  async function deleteFile(path) {
+    const { error } = await sb.storage.from(BUCKET).remove([path]);
+    if (error) { showToast('Erro ao deletar.', '❌'); return; }
+    showToast('Arquivo removido.', '🗑');
+    await loadFiles();
+  }
+
+  // ── Visualizar ──
+  async function viewFile(path, name, isImage) {
+    document.getElementById('modal-file-name').textContent = name;
+    document.getElementById('pdf-modal').classList.add('open');
+
+    const body    = document.getElementById('pdf-body');
+    const loading = document.getElementById('pdf-loading');
+    body.querySelectorAll('canvas, img').forEach(c => c.remove());
+    loading.style.display = 'flex';
+
+    const { data, error } = await sb.storage.from(BUCKET).download(path);
+    if (error) { loading.style.display = 'none'; body.innerHTML += '<p style="color:#fca5a5;font-size:13px;margin-top:20px;">Erro ao carregar arquivo.</p>'; return; }
+
+    const url = URL.createObjectURL(data);
+
+    if (isImage === 'true') {
+      loading.style.display = 'none';
+      const img = document.createElement('img');
+      img.src = url;
+      img.style.cssText = 'max-width:100%;border-radius:8px;box-shadow:0 4px 20px rgba(0,0,0,.4);';
+      body.appendChild(img);
+      return;
+    }
+
+    try {
+      const arrayBuffer = await data.arrayBuffer();
+      const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+      loading.style.display = 'none';
+      for (let i = 1; i <= pdf.numPages; i++) {
+        const page     = await pdf.getPage(i);
+        const viewport = page.getViewport({ scale: 1.5 });
+        const canvas   = document.createElement('canvas');
+        canvas.width   = viewport.width;
+        canvas.height  = viewport.height;
+        body.appendChild(canvas);
+        await page.render({ canvasContext: canvas.getContext('2d'), viewport }).promise;
+      }
+    } catch(e) {
+      loading.style.display = 'none';
+      body.innerHTML += '<p style="color:#fca5a5;font-size:13px;margin-top:20px;">Erro ao renderizar o PDF.</p>';
+    }
+  }
+
+  function closeModal() {
+    document.getElementById('pdf-modal').classList.remove('open');
+    document.getElementById('pdf-body').querySelectorAll('canvas, img').forEach(c => c.remove());
+  }
+
+  document.getElementById('pdf-modal').addEventListener('click', function(e) { if (e.target === this) closeModal(); });
+
+  // Drag & drop
+  const zone = document.getElementById('upload-zone');
+  zone.addEventListener('dragover', e => { e.preventDefault(); zone.classList.add('drag-over'); });
+  zone.addEventListener('dragleave', () => zone.classList.remove('drag-over'));
+  zone.addEventListener('drop', e => {
+    e.preventDefault(); zone.classList.remove('drag-over');
+    const file = e.dataTransfer.files[0];
+    if (file) handleFile({ files: [file] });
+  });
+
+  document.addEventListener('keydown', e => {
+    if (e.key !== 'Enter' || !document.getElementById('page-login').classList.contains('active')) return;
+    document.getElementById('panel-login').classList.contains('active') ? handleLogin() : handleRegister();
+  });
+
+
+
+  // Mobile nav
+  function updateMobileNav() {
+    const nav = document.getElementById('mobile-nav');
+    const isDashboard = document.getElementById('page-dashboard').classList.contains('active');
+    const isMobile = window.innerWidth <= 900;
+    nav.style.display = (isDashboard && isMobile) ? 'flex' : 'none';
+    if (isDashboard && isMobile) {
+      document.querySelector('.main').style.paddingBottom = '90px';
+    }
+  }
+
+  window.addEventListener('resize', updateMobileNav);
+
+
+
+  // Verifica sessão ativa ao carregar
+  sb.auth.getSession().then(async ({ data: { session } }) => {
+    if (session) {
+      currentUser = session.user;
+      const name = currentUser.user_metadata?.name || currentUser.email.split('@')[0];
+      document.getElementById('user-greeting').textContent = '👋 Olá, ' + name.split(' ')[0] + '!';
+      await loadFiles();
+      goTo('page-dashboard');
+    }
+  });
+</script>
+</body>
+</html>
